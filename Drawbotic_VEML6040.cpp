@@ -1,6 +1,7 @@
 #include "Drawbotic_VEML6040.h"
 
 #include <math.h>
+#include <Arduino.h>
 
 uint16_t Drawbotic_VEML6040::IntegrationTimeToMSec(VEML6040_IntegrationTime intTime)
 {
@@ -23,42 +24,50 @@ uint16_t Drawbotic_VEML6040::IntegrationTimeToMSec(VEML6040_IntegrationTime intT
   }
 }
 
-void Drawbotic_VEML6040::i2cRead(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
+uint16_t Drawbotic_VEML6040::read(uint8_t reg)
 {
-  Wire.beginTransmission(dev_addr);
-  Wire.write(reg_addr);
-  Wire.endTransmission();
+  uint16_t data = 0;
 
-  Wire.requestFrom(dev_addr, len);
-  for(int i = 0; i < len; i++)
+  Wire.beginTransmission(VEML6040_ADDR);
+  Wire.write(reg);
+  Wire.endTransmission(false);
+  Wire.requestFrom(VEML6040_ADDR, 2);
+  while(Wire.available())
   {
-    data[i] = Wire.read();
+    data = Wire.read();
+    data |= Wire.read() << 8;
   }
-}
 
-void Drawbotic_VEML6040::i2cWrite(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
-{
-  Wire.beginTransmission(dev_addr);
-
-  Wire.write(reg_addr);
-  for(int i = 0; i < len; i++)
-  {
-    Wire.write(data[i]);
-  }
-  Wire.endTransmission();
+  return data;
 }
 
 Drawbotic_VEML6040::Drawbotic_VEML6040()
-{
+{}
 
+bool Drawbotic_VEML6040::begin(void) {
+  bool sensorExists;
+  Wire.begin();
+  Wire.beginTransmission(VEML6040_ADDR);
+  if (Wire.endTransmission() == 0) {
+    sensorExists = true;
+  }
+  return sensorExists;
 }
 
-void Drawbotic_VEML6040::initialise(VEML6040_IntegrationTime intTime)
-{
-  Wire.begin();
-  
-  uint8_t data[2] = { (uint8_t)intTime, 0x00 };
-  i2cWrite(VEML6040_ADDR, VEML6040_REG_CONF, data, 2);
+void Drawbotic_VEML6040::setConfig(VEML6040_IntegrationTime intTime, bool force, bool trig, bool disabled)
+{ 
+  uint8_t sensorEnabled = disabled ? VEML6040_SD_DISABLE : VEML6040_SD_ENABLE;
+  uint8_t mode = force ? VEML6040_AF_FORCE : VEML6040_AF_AUTO;
+  uint8_t trigger = trig ? VEML6040_TRIG_ENABLE : VEML6040_TRIG_DISABLE;
+
+  uint8_t conf = (uint8_t)intTime + sensorEnabled + mode + trigger;
+
+  Wire.beginTransmission(VEML6040_ADDR);
+  Wire.write(VEML6040_REG_CONF);
+  Wire.write(conf);
+  Wire.write(0);
+  Wire.endTransmission();
+
   m_intTime = intTime;
 }
 
@@ -71,18 +80,11 @@ VEML6040_Colour Drawbotic_VEML6040::getColour()
 {
   uint8_t data[2];
   VEML6040_Colour result;
-  //read red
-  i2cRead(VEML6040_ADDR, VEML6040_REG_R_DATA, data, 2);
-  result.red = ((uint16_t)data[1]) << 8 | data[0];
-
-  i2cRead(VEML6040_ADDR, VEML6040_REG_G_DATA, data, 2);
-  result.green = ((uint16_t)data[1]) << 8 | data[0];
-
-  i2cRead(VEML6040_ADDR, VEML6040_REG_B_DATA, data, 2);
-  result.blue = ((uint16_t)data[1]) << 8 | data[0];
-
-  i2cRead(VEML6040_ADDR, VEML6040_REG_W_DATA, data, 2);
-  result.white = ((uint16_t)data[1]) << 8 | data[0];
+  
+  result.red = read(VEML6040_REG_R_DATA);
+  result.green = read(VEML6040_REG_G_DATA);
+  result.blue = read(VEML6040_REG_B_DATA);
+  result.white = read(VEML6040_REG_W_DATA);
 
   return result;
 }
@@ -105,8 +107,7 @@ float Drawbotic_VEML6040::getAmbientLux()
   uint16_t green;
   float lux;
 
-  i2cRead(VEML6040_ADDR, VEML6040_REG_G_DATA, data, 2);
-  green = ((uint16_t)data[1]) << 8 | data[0];
+  green = read(VEML6040_REG_G_DATA);
 
   switch(m_intTime)
   {

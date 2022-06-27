@@ -5,7 +5,7 @@ Drawbotic_VEML6040 sensor;
 void setup()
 {
   Serial.begin(9600);
-  sensor.initialise(VEML6040_IT_40MS);
+  sensor.setConfig(VEML6040_IT_40MS);
 }
 
 void loop()
