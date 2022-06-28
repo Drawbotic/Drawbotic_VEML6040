@@ -50,10 +50,10 @@ enum VEML6040_IntegrationTime
 
 struct VEML6040_Colour
 {
-  uint16_t red;
-  uint16_t green;
-  uint16_t blue;
-  uint16_t white;
+  float red;
+  float green;
+  float blue;
+  float white;
 };
 typedef VEML6040_Colour VEML6040_Color; //for the yanks
 
