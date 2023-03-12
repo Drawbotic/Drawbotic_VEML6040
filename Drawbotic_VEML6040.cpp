@@ -3,10 +3,8 @@
 #include <math.h>
 #include <Arduino.h>
 
-uint16_t Drawbotic_VEML6040::IntegrationTimeToMSec(VEML6040_IntegrationTime intTime)
-{
-  switch(intTime)
-  {
+uint16_t Drawbotic_VEML6040::IntegrationTimeToMSec(VEML6040_IntegrationTime intTime) {
+  switch(intTime) {
   case VEML6040_IT_40MS:
     return 40;
   case VEML6040_IT_80MS:
@@ -24,16 +22,14 @@ uint16_t Drawbotic_VEML6040::IntegrationTimeToMSec(VEML6040_IntegrationTime intT
   }
 }
 
-uint16_t Drawbotic_VEML6040::read(uint8_t reg)
-{
+uint16_t Drawbotic_VEML6040::read(uint8_t reg) {
   uint16_t data = 0;
 
   Wire.beginTransmission(VEML6040_ADDR);
   Wire.write(reg);
   Wire.endTransmission(false);
   Wire.requestFrom(VEML6040_ADDR, 2);
-  while(Wire.available())
-  {
+  while(Wire.available()) {
     data = Wire.read();
     data |= Wire.read() << 8;
   }
@@ -54,8 +50,7 @@ bool Drawbotic_VEML6040::begin(void) {
   return sensorExists;
 }
 
-void Drawbotic_VEML6040::setConfig(VEML6040_IntegrationTime intTime, bool force, bool trig, bool disabled)
-{ 
+void Drawbotic_VEML6040::setConfig(VEML6040_IntegrationTime intTime, bool force, bool trig, bool disabled) { 
   uint8_t sensorEnabled = disabled ? VEML6040_SD_DISABLE : VEML6040_SD_ENABLE;
   uint8_t mode = force ? VEML6040_AF_FORCE : VEML6040_AF_AUTO;
   uint8_t trigger = trig ? VEML6040_TRIG_ENABLE : VEML6040_TRIG_DISABLE;
@@ -71,14 +66,11 @@ void Drawbotic_VEML6040::setConfig(VEML6040_IntegrationTime intTime, bool force,
   m_intTime = intTime;
 }
 
-uint16_t Drawbotic_VEML6040::getCurrentIntegrationTime()
-{
+uint16_t Drawbotic_VEML6040::getCurrentIntegrationTime() {
   return IntegrationTimeToMSec(m_intTime);
 }
 
-VEML6040_Colour Drawbotic_VEML6040::getColour()
-{
-  uint8_t data[2];
+VEML6040_Colour Drawbotic_VEML6040::getColour() {
   VEML6040_Colour result;
   
   result.red = read(VEML6040_REG_R_DATA);
@@ -89,8 +81,7 @@ VEML6040_Colour Drawbotic_VEML6040::getColour()
   return result;
 }
 
-float Drawbotic_VEML6040::getCCT(float offset)
-{
+float Drawbotic_VEML6040::getCCT(float offset) {
   VEML6040_Colour reading = getColour();
 
   float ccti;
@@ -101,16 +92,13 @@ float Drawbotic_VEML6040::getCCT(float offset)
   return 4278.6 * pow(ccti, -1.2455);
 }
 
-float Drawbotic_VEML6040::getAmbientLux()
-{
-  uint8_t data[2];
+float Drawbotic_VEML6040::getAmbientLux() {
   uint16_t green;
   float lux;
 
   green = read(VEML6040_REG_G_DATA);
 
-  switch(m_intTime)
-  {
+  switch(m_intTime) {
   case VEML6040_IT_40MS:
     lux = green * VEML6040_GSENS_40MS;
     break;
