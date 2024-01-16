@@ -28,6 +28,9 @@
 #define VEML6040_GSENS_640MS  0.01573
 #define VEML6040_GSENS_1280MS 0.007865
 
+/*!
+ * \brief An enum describing the valid integration times, see setConfig and IntegrationTimeToMSec
+ */
 enum VEML6040_IntegrationTime {
   VEML6040_IT_40MS   = 0x00,
   VEML6040_IT_80MS   = 0x10,
@@ -37,14 +40,22 @@ enum VEML6040_IntegrationTime {
   VEML6040_IT_1280MS = 0x50,
 };
 
+/*!
+ * \brief A struct representing an RGBW colour read from the VEML6040 sensor
+ */
 struct VEML6040_Colour {
-  float red;
-  float green;
-  float blue;
-  float white;
+  float red;    //!< The read component
+  float green;  //!< The green component
+  float blue;   //!< The blue component
+  float white;  //!< The white component
 };
-typedef VEML6040_Colour VEML6040_Color; //for the yanks
 
+//! A typedef for alternative spelling
+typedef VEML6040_Colour VEML6040_Color;
+
+/*!
+ * \brief The class containing all of the functionality for the VEML6040 RGBW colour sensor
+ */
 class Drawbotic_VEML6040 {
 public:
   Drawbotic_VEML6040();
@@ -52,7 +63,10 @@ public:
   void setConfig(VEML6040_IntegrationTime intTime, bool force = false, bool trig = false, bool disabled = false);
   uint16_t getCurrentIntegrationTime();
   VEML6040_Colour getColour();
-  VEML6040_Colour getColor() { return getColour(); }  //...again for the yanks
+  /*!
+   * \brief Alternative spelling for getColour
+   */
+  VEML6040_Colour getColor() { return getColour(); }
   float getCCT(float offset = 0.5f);
   float getAmbientLux();
   

@@ -3,6 +3,12 @@
 #include <math.h>
 #include <Arduino.h>
 
+/*!
+ * \brief Converts a VEML6040_IntegrationTime enum value to milliseconds
+ * 
+ * \param intTime The VEML6040_IntegrationTime to convert
+ * \return The value of intTime in milliseconds
+ */
 uint16_t Drawbotic_VEML6040::IntegrationTimeToMSec(VEML6040_IntegrationTime intTime) {
   switch(intTime) {
   case VEML6040_IT_40MS:
@@ -37,9 +43,19 @@ uint16_t Drawbotic_VEML6040::read(uint8_t reg) {
   return data;
 }
 
+/*!
+ * \brief Construct a new Drawbotic_VEML6040 object
+ * 
+ */
 Drawbotic_VEML6040::Drawbotic_VEML6040()
 {}
 
+/*!
+ * \brief Starts the VEML6040 sensor
+ * 
+ * \return true - Sensor started successfully
+ * \return false - Sensor start up failed
+ */
 bool Drawbotic_VEML6040::begin(void) {
   bool sensorExists;
   Wire.begin();
@@ -50,6 +66,14 @@ bool Drawbotic_VEML6040::begin(void) {
   return sensorExists;
 }
 
+/*!
+ * \brief Sets the configuration for the VEML6040 sensor
+ * 
+ * \param intTime The desired Integration Time, see VEML6040_IntegrationTime enum
+ * \param force (Default: false) Enables force mode (readings only occur when trigger is set true), otherwise auto mode is used.
+ * \param trig (Default: false) When true triggers a reading when force is also true
+ * \param disabled (Default: false) when true disables all reading
+ */
 void Drawbotic_VEML6040::setConfig(VEML6040_IntegrationTime intTime, bool force, bool trig, bool disabled) { 
   uint8_t sensorEnabled = disabled ? VEML6040_SD_DISABLE : VEML6040_SD_ENABLE;
   uint8_t mode = force ? VEML6040_AF_FORCE : VEML6040_AF_AUTO;
@@ -66,10 +90,20 @@ void Drawbotic_VEML6040::setConfig(VEML6040_IntegrationTime intTime, bool force,
   m_intTime = intTime;
 }
 
+/*!
+ * \brief Returns the current Integration Time in milliseconds
+ * 
+ * \return Current Integration time in milliseconds 
+ */
 uint16_t Drawbotic_VEML6040::getCurrentIntegrationTime() {
   return IntegrationTimeToMSec(m_intTime);
 }
 
+/*!
+ * \brief Reads the current RGBW value from the VEML6040 sensor
+ * 
+ * \return A VEML6040 struct containing the RGBW data
+ */
 VEML6040_Colour Drawbotic_VEML6040::getColour() {
   VEML6040_Colour result;
   
@@ -81,6 +115,12 @@ VEML6040_Colour Drawbotic_VEML6040::getColour() {
   return result;
 }
 
+/*!
+ * \brief Reads the VEML6040 sensor and calculates the Correlated Colour Temperature (CCT) based on that reading
+ * 
+ * \param offset (Default: 0.5) An offset used in the CCT calculation, open air is calibrated to 0.5, different coverings might change this
+ * \return The calculated CCT
+ */
 float Drawbotic_VEML6040::getCCT(float offset) {
   VEML6040_Colour reading = getColour();
 
@@ -92,6 +132,11 @@ float Drawbotic_VEML6040::getCCT(float offset) {
   return 4278.6 * pow(ccti, -1.2455);
 }
 
+/*!
+ * \brief Reads the VEML6040 sensor and calculates the Ambient Lux level from that reading
+ * 
+ * \return The calculated Lux value
+ */
 float Drawbotic_VEML6040::getAmbientLux() {
   uint16_t green;
   float lux;
